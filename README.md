@@ -1,6 +1,6 @@
 # Android VNC Viewer
 
-This is an Android VNC server for Android 4.4 to 7.1 (lower Android versions may work, but untested). Originally forked from [droidVncServer](https://github.com/oNaiPs/droidVncServer), this project has been rewritten in C++ and currently only supports screen capture (ie. it cannot manipulate the device). It uses [libvncserver](https://libvnc.github.io) for VNC server capabilities, and the OpenSBF project's [minicap-shared](/opensbf/minicap/) native library as an interface for capturing frames.
+This is an Android VNC server for Android 4.4 to 10.0 (lower Android versions may work, but untested). Originally forked from [droidVncServer](https://github.com/oNaiPs/droidVncServer), this project has been rewritten in C++ and currently only supports screen capture (ie. it cannot manipulate the device). It uses [libvncserver](https://libvnc.github.io) for VNC server capabilities, and the OpenSBF project's [minicap-shared](/opensbf/minicap/) native library as an interface for capturing frames.
 
 Features:
 
@@ -58,7 +58,7 @@ The `-b` flag allows you to specify the number of bytes per pixel (bpp). By defa
 ## Building and running
 
 1. Run `download_minicap.sh` to download the prebuilt `minicap-shared` libraries from the [minicap](/openstf/minicap) repo.
-2. `git clone https://github.com/openstf/RotationWatcher.apk`
+2. `git clone https://github.com/SufianBabri/RotationWatcher.apk`
 3. Run `./gradlew assembleDebug` to build the RotationWatcher app.
 4. Copy the built apk to the root of this repo as `rotate.apk`
 5. Connect the target device with debugging enabled.
