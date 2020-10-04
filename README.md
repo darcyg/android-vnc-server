@@ -1,6 +1,6 @@
-# Android VNC Viewer
+# Android VNC Server
 
-This is an Android VNC server for Android 4.4 to 10.0 (lower Android versions may work, but untested). Originally forked from [droidVncServer](https://github.com/oNaiPs/droidVncServer), this project has been rewritten in C++ and currently only supports screen capture (ie. it cannot manipulate the device). It uses [libvncserver](https://libvnc.github.io) for VNC server capabilities, and the OpenSBF project's [minicap-shared](/opensbf/minicap/) native library as an interface for capturing frames.
+This is an Android VNC server for Android 4.4 to 10.0 (lower Android versions may work, but untested). Originally forked from [droidVncServer](https://github.com/oNaiPs/droidVncServer), this project has been rewritten in C++ and currently only supports screen capture (ie. it cannot manipulate the device). It uses [libvncserver](https://libvnc.github.io) for VNC server capabilities, and the OpenSTF project's [minicap-shared](https://github.com/openstf/minicap/) native library as an interface for capturing frames.
 
 Features:
 
@@ -27,7 +27,7 @@ On some ZTE devices, the `-z` flag is necessary for the rotation or orientation 
 
 ### Orientation change support
 
-When VNC screen rotation/orientation is not enforced, the VNC server will automatically resize its screen to mirror the device's current orientation. Detection of orientation changes is done using the OpenSBF project's [RotationWatcher.apk](/opensbf/RotationWatcher.apk).
+When VNC screen rotation/orientation is not enforced, the VNC server will automatically resize its screen to mirror the device's current orientation. Detection of orientation changes is done using the OpenSTF project's [RotationWatcher.apk](https://github.com/openstf/RotationWatcher.apk).
 
 ### Android screenshot (`-S`, `-U`)
 
