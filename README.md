@@ -63,5 +63,7 @@ The `-b` flag allows you to specify the number of bytes per pixel (bpp). By defa
 4. Copy the built apk to the root of this repo as `rotate.apk`
 5. Connect the target device with debugging enabled.
 6. Run the `run.sh` script.
+7. Run 'adb shell'
+8. Run 'su -c /data/local/tmp/droidvncserver-run.sh'
 
 Note that the `run.sh` script only expects a single device connected to the computer. It will be necessary to modify the script and use the `-s` flag with `adb` commands to target a specific device if multiple devices are connected.
