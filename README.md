@@ -27,7 +27,7 @@ On some ZTE devices, the `-z` flag is necessary for the rotation or orientation 
 
 ### Orientation change support
 
-When VNC screen rotation/orientation is not enforced, the VNC server will automatically resize its screen to mirror the device's current orientation. Detection of orientation changes is done using the OpenSTF project's [RotationWatcher.apk](https://github.com/openstf/RotationWatcher.apk).
+When VNC screen rotation/orientation is not enforced, the VNC server will automatically resize its screen to mirror the device's current orientation. Detection of orientation changes is done using the OpenSTF project's [RotationWatcher.apk](https://github.com/SufianBabri/RotationWatcher.apk).
 
 ### Android screenshot (`-S`, `-U`)
 

@@ -94,7 +94,7 @@ static int touchfd = -1;
 static int xmin, xmax;
 static int ymin, ymax;
 static char KBD_DEVICE[256] = "/dev/input/event3";
-static char TOUCH_DEVICE[256] = "/dev/input/event6";
+static char TOUCH_DEVICE[256] = "/dev/input/event5";
 static bool mTouchDown = false;
 static int mCursorX = -1;
 static int mCursorY = -1;
@@ -363,14 +363,16 @@ static void onMultiplePointerEvent(int buttonMask, int x, int y, rfbClientPtr cl
         case 90:
             tx = screenWidth - y;
             ty = x;
-            break;   
+            break;
         case 270:
             tx = y;
-            ty = screenHeight - x;           
-            break;              
+            ty = screenHeight - x;
+            break;
         default:
             break;
     }
+    tx = tx*xmax/screenWidth;
+    ty = ty*ymax/screenHeight;
     injectTouchEventMultiTouch(tx, ty, (buttonMask&1)!=0);
 }
 
@@ -381,15 +383,85 @@ static void onSinglePointerEvent(int buttonMask, int x, int y, rfbClientPtr cl) 
         case 90:
             tx = screenWidth - y;
             ty = x;
-            break;   
+            break;
         case 270:
             tx = y;
-            ty = screenHeight - x;           
-            break;              
+            ty = screenHeight - x;
+            break;
         default:
             break;
     }
+    tx = tx*xmax/screenWidth;
+    ty = ty*ymax/screenHeight;
     injectTouchEventSingleTouch(tx, ty, (buttonMask&1)!=0);
+}
+
+//remove trailing spaces
+static char *rtrim(char *str) {
+    if (str == NULL || *str == '\0')
+    {
+        return str;
+    }
+    int len = strlen(str);
+    char *p = str + len - 1;
+    while (p >= str && isspace(*p))
+    {
+        *p = '\0'; --p;
+    }
+    return str;
+} 
+
+static void findKeyAndTouchDevice() {
+    FILE *fp = popen("getevent -ilq", "r");
+    char buf[40961];
+    if (fp == NULL) {
+        FATAL("error could not getevent");
+        return;
+    }
+    fread(buf, sizeof(char), 40960, fp);
+    pclose(fp);
+    char *p = strstr(buf, "add device");
+    bool keyFind = false;
+    bool touchFind = false;
+    while(p) {
+        char *nextp = strstr(p+10, "add device");
+        if (nextp!= NULL) {
+            *nextp = '\0';
+        }
+        if (strstr(p,"ABS_MT_POSITION_X ")!=NULL) {
+            char *st = strchr(p, '/');
+            if (st!=NULL) {
+                char *ed = strchr(p, '\n');
+                if (ed == NULL) {
+                    continue;
+                }
+                touchFind = true;
+                memcpy(TOUCH_DEVICE, st, sizeof(char)*(ed-st));
+                TOUCH_DEVICE[ed-st+1]='\0';
+                rtrim(TOUCH_DEVICE);
+            }
+        }
+        if (strstr(p, "KEY_HOME")!=NULL) {
+            char *st = strchr(p, '/');
+            if (st!=NULL) {
+                char *ed = strchr(p, '\n');
+                if (ed == NULL) {
+                    continue;
+                }
+                keyFind = true;
+                memcpy(KBD_DEVICE, st, sizeof(char)*(ed-st));
+                KBD_DEVICE[ed-st+1]='\0';
+                rtrim(KBD_DEVICE);
+            }
+        }
+        if (touchFind && keyFind ) {
+            break;
+        }
+        if (nextp!= NULL) {
+            *nextp = 'a';
+        }
+        p = nextp;
+    }
 }
 
 static void init_kbd() {
@@ -451,6 +523,7 @@ static uint32_t figure_out_events_device_reports(int fd) {
 static void cleanup_kbd() {
     if(kbdfd != -1) {
         close(kbdfd);
+        kbdfd = -1;
     }
 }
 
@@ -467,18 +540,36 @@ static void init_touch() {
     }
     xmin = info.minimum;
     xmax = info.maximum;
+    if (xmax <=0 ) {
+        if(ioctl(touchfd, EVIOCGABS(ABS_MT_POSITION_X), &info)) {
+            LOGD("cannot get ABS_MT_POSITION_X info, %s\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        xmin = info.minimum;
+        xmax = info.maximum;
+    }
     if(ioctl(touchfd, EVIOCGABS(ABS_Y), &info)) {
         LOGD("cannot get ABS_Y, %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
     ymin = info.minimum;
     ymax = info.maximum;
+    if (ymax <=0) {
+        if(ioctl(touchfd, EVIOCGABS(ABS_MT_POSITION_Y), &info)) {
+            LOGD("cannot get ABS_MT_POSITION_Y, %s\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        ymin = info.minimum;
+        ymax = info.maximum;
+    }
+    LOGD("xmin:%d,xmax:%d,ymin:%d,ymax:%d", xmin,xmax,ymin,ymax);
     g_device_flags = figure_out_events_device_reports(touchfd);
 }
 
 static void cleanup_touch() {
     if(touchfd != -1) {
         close(touchfd);
+        touchfd = -1;
     }
 }
 
@@ -1108,7 +1199,7 @@ int main(int argc, char **argv)
                         desiredBpp != 8)
                         FATAL("Unknown bpp value: %d", desiredBpp);
                     break;
-                case 'z': 
+                case 'z':
                     i++;
                     rotate180 = true;
                     break;
@@ -1119,7 +1210,7 @@ int main(int argc, char **argv)
                     break;
                 case 's':
                     if (++i >= argc) FATAL("No scaling value provided");
-                    r = atoi(argv[i]); 
+                    r = atoi(argv[i]);
                     if (r >= 1 && r <= 100) {
                         scaling = r;
                     } else {
@@ -1365,10 +1456,13 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    LOGD("Initializing keyboard device %s ...\n", KBD_DEVICE);
-    init_kbd();
-    LOGD("Initializing touch device %s ...\n", TOUCH_DEVICE);
+    findKeyAndTouchDevice();
+    LOGD("Initializing touch device %s ...", TOUCH_DEVICE);
     init_touch();
+    LOGD("Initializing keyboard device %s ...", KBD_DEVICE);
+    if (strcmp(TOUCH_DEVICE, KBD_DEVICE)!=0) {
+        init_kbd();
+    }
 
     initVncServer(argc, argv, frame.width, frame.height, frame.stride, targetBpp);
     (*setupScreenFn)();
